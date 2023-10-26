@@ -48,9 +48,9 @@ object CommonMangaItemDefaults {
     const val BrowseFavoriteCoverAlpha = 0.34f
 }
 
-private val ContinueReadingButtonSize = 32.dp
-private val ContinueReadingButtonGridPadding = 6.dp
-private val ContinueReadingButtonListSpacing = 8.dp
+private val ContinueReadingButtonSize = 26.dp
+private val ContinueReadingButtonGridPadding = 8.dp
+private val ContinueReadingButtonListSpacing = 10.dp
 
 private const val GridSelectedCoverAlpha = 0.76f
 
@@ -368,7 +368,7 @@ private fun ContinueReadingButton(
         FilledIconButton(
             onClick = onClickContinueReading,
             modifier = Modifier.size(ContinueReadingButtonSize),
-            shape = MaterialTheme.shapes.small,
+            shape = MaterialTheme.shapes.large,
             colors = IconButtonDefaults.filledIconButtonColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f),
                 contentColor = contentColorFor(MaterialTheme.colorScheme.primaryContainer),
@@ -377,7 +377,7 @@ private fun ContinueReadingButton(
             Icon(
                 imageVector = Icons.Filled.PlayArrow,
                 contentDescription = "",
-                modifier = Modifier.size(16.dp),
+                modifier = Modifier.size(18.dp),
             )
         }
     }
