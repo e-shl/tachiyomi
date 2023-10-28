@@ -127,13 +127,14 @@ private fun BoxScope.CoverTextOverlay(
             .align(Alignment.BottomCenter),
     )
     Row(
-        modifier = Modifier.align(Alignment.BottomStart),
+        modifier = Modifier.align(Alignment.BottomStart)
+            .height(ContinueReadingButtonSize * 2),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         GridItemTitle(
             modifier = Modifier
                 .weight(1f)
-                .padding(ContinueReadingButtonGridPadding),
+                .padding(start = ContinueReadingButtonGridPadding, end = ContinueReadingButtonGridPadding),
             title = title,
             style = MaterialTheme.typography.titleSmall.copy(
                 color = Color.White,
