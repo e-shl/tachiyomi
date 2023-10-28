@@ -48,7 +48,7 @@ object CommonMangaItemDefaults {
     const val BrowseFavoriteCoverAlpha = 0.34f
 }
 
-private val ContinueReadingButtonSize = 26.dp
+private val ContinueReadingButtonSize = 24.dp
 private val ContinueReadingButtonGridPadding = 8.dp
 private val ContinueReadingButtonListSpacing = 10.dp
 
@@ -128,12 +128,12 @@ private fun BoxScope.CoverTextOverlay(
     )
     Row(
         modifier = Modifier.align(Alignment.BottomStart),
-        verticalAlignment = Alignment.Bottom,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         GridItemTitle(
             modifier = Modifier
                 .weight(1f)
-                .padding(8.dp),
+                .padding(ContinueReadingButtonGridPadding),
             title = title,
             style = MaterialTheme.typography.titleSmall.copy(
                 color = Color.White,
@@ -148,7 +148,6 @@ private fun BoxScope.CoverTextOverlay(
             ContinueReadingButton(
                 modifier = Modifier.padding(
                     end = ContinueReadingButtonGridPadding,
-                    bottom = ContinueReadingButtonGridPadding,
                 ),
                 onClickContinueReading = onClickContinueReading,
             )
@@ -368,7 +367,7 @@ private fun ContinueReadingButton(
         FilledIconButton(
             onClick = onClickContinueReading,
             modifier = Modifier.size(ContinueReadingButtonSize),
-            shape = MaterialTheme.shapes.large,
+            shape = MaterialTheme.shapes.small,
             colors = IconButtonDefaults.filledIconButtonColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f),
                 contentColor = contentColorFor(MaterialTheme.colorScheme.primaryContainer),
