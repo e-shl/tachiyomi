@@ -128,7 +128,8 @@ private fun BoxScope.CoverTextOverlay(
     )
     Row(
         modifier = Modifier.align(Alignment.BottomStart)
-            .height(ContinueReadingButtonSize * 2),
+            .height(ContinueReadingButtonSize + ContinueReadingButtonGridPadding * 3)
+            .padding(bottom = ContinueReadingButtonGridPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         GridItemTitle(
