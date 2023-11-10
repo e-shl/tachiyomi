@@ -739,6 +739,7 @@
     <string name="by_default_side_nav_info">By default, side navigation is used for certain phones and small tablets when in landscape, and always shows on larger tablets</string>
     <string name="follow_system_theme">Follow system theme</string>
     <string name="pure_black_dark_mode">Pure black dark mode</string>
+    <string name="contrast_mode">Contrast mode</string>
     <string name="details_page">Details page</string>
     <string name="theme_buttons_based_on_cover">Theme buttons based on cover</string>
     <string name="expanded_toolbar">Expanded toolbar</string>

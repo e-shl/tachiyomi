@@ -84,6 +84,25 @@ class SettingsAppearanceController : SettingsController() {
                     true
                 }
             }
+
+            switchPreference {
+                key = Keys.themeContrastAmoled
+                titleRes = R.string.contrast_mode
+                defaultValue = false
+
+                preferences.nightMode().asImmediateFlowIn(viewScope) { mode ->
+                    isVisible = (mode != AppCompatDelegate.MODE_NIGHT_NO) && preferences.themeDarkAmoled().get()
+                }
+
+                onChange {
+                    if (context.isInNightMode()) {
+                        activity?.recreate()
+                    } else {
+                        themePreference?.fastAdapterDark?.notifyDataSetChanged()
+                    }
+                    true
+                }
+            }
         }
 
         preferenceCategory {
