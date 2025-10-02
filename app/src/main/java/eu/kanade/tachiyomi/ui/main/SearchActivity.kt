@@ -7,7 +7,6 @@ import android.os.Bundle
 import androidx.core.view.isVisible
 import com.bluelinelabs.conductor.Controller
 import com.bluelinelabs.conductor.RouterTransaction
-import com.bluelinelabs.conductor.changehandler.FadeChangeHandler
 import com.bluelinelabs.conductor.changehandler.SimpleSwapChangeHandler
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.DatabaseHelper
@@ -15,6 +14,7 @@ import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.ui.base.SmallToolbarInterface
 import eu.kanade.tachiyomi.ui.base.controller.BaseController
 import eu.kanade.tachiyomi.ui.base.controller.DialogController
+import eu.kanade.tachiyomi.ui.base.controller.FadeChangeHandler
 import eu.kanade.tachiyomi.ui.manga.MangaDetailsController
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.security.SecureActivityDelegate
@@ -29,7 +29,6 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 class SearchActivity : MainActivity() {
-
     private var backToMain = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,11 +38,14 @@ class SearchActivity : MainActivity() {
         binding.searchToolbar.setNavigationOnClickListener {
             val rootSearchController = router.backstack.lastOrNull()?.controller
             if ((
-                rootSearchController is RootSearchInterface ||
-                    (currentToolbar != binding.searchToolbar && binding.appBar.useLargeToolbar)
-                ) && rootSearchController !is SmallToolbarInterface
+                    rootSearchController is RootSearchInterface ||
+                        (currentToolbar != binding.searchToolbar && binding.appBar.useLargeToolbar)
+                ) &&
+                rootSearchController !is SmallToolbarInterface
             ) {
-                binding.searchToolbar.menu.findItem(R.id.action_search)?.expandActionView()
+                binding.searchToolbar.menu
+                    .findItem(R.id.action_search)
+                    ?.expandActionView()
             } else {
                 popToRoot()
             }
@@ -71,16 +73,22 @@ class SearchActivity : MainActivity() {
         if (intentShouldGoBack()) {
             onBackPressedDispatcher.onBackPressed()
         } else if (!router.handleBack()) {
-            val intent = Intent(this, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
+            val intent =
+                Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
             backToMain = true
             startActivity(intent)
             finishAfterTransition()
         }
     }
 
-    override fun setFloatingToolbar(show: Boolean, solidBG: Boolean, changeBG: Boolean, showSearchAnyway: Boolean) {
+    override fun setFloatingToolbar(
+        show: Boolean,
+        solidBG: Boolean,
+        changeBG: Boolean,
+        showSearchAnyway: Boolean,
+    ) {
         super.setFloatingToolbar(show, solidBG, changeBG, showSearchAnyway)
         val useLargeTB = binding.appBar.useLargeToolbar
         if (!useLargeTB) {
@@ -91,8 +99,7 @@ class SearchActivity : MainActivity() {
         }
     }
 
-    private fun intentShouldGoBack() =
-        intent.action in listOf(SHORTCUT_MANGA, SHORTCUT_READER_SETTINGS, SHORTCUT_BROWSE)
+    private fun intentShouldGoBack() = intent.action in listOf(SHORTCUT_MANGA, SHORTCUT_READER_SETTINGS, SHORTCUT_BROWSE)
 
     override fun syncActivityViewWithController(
         to: Controller?,
@@ -168,7 +175,8 @@ class SearchActivity : MainActivity() {
                     SecureActivityDelegate.promptLockIfNeeded(this, true)
                 }
                 router.replaceTopController(
-                    RouterTransaction.with(MangaDetailsController(extras))
+                    RouterTransaction
+                        .with(MangaDetailsController(extras))
                         .pushChangeHandler(SimpleSwapChangeHandler())
                         .popChangeHandler(FadeChangeHandler()),
                 )
@@ -177,14 +185,16 @@ class SearchActivity : MainActivity() {
                 val extras = intent.extras ?: return false
                 SecureActivityDelegate.promptLockIfNeeded(this, true)
                 router.replaceTopController(
-                    RouterTransaction.with(BrowseSourceController(extras))
+                    RouterTransaction
+                        .with(BrowseSourceController(extras))
                         .pushChangeHandler(SimpleSwapChangeHandler())
                         .popChangeHandler(FadeChangeHandler()),
                 )
             }
             SHORTCUT_READER_SETTINGS -> {
                 router.replaceTopController(
-                    RouterTransaction.with(SettingsReaderController())
+                    RouterTransaction
+                        .with(SettingsReaderController())
                         .pushChangeHandler(SimpleSwapChangeHandler())
                         .popChangeHandler(FadeChangeHandler()),
                 )
@@ -195,22 +205,25 @@ class SearchActivity : MainActivity() {
     }
 
     companion object {
-        fun openMangaIntent(context: Context, id: Long?, canReturnToMain: Boolean = false) = Intent(
+        fun openMangaIntent(
+            context: Context,
+            id: Long?,
+            canReturnToMain: Boolean = false,
+        ) = Intent(
             context,
             SearchActivity::class
                 .java,
-        )
-            .apply {
-                action = if (canReturnToMain) SHORTCUT_MANGA_BACK else SHORTCUT_MANGA
-                putExtra(MangaDetailsController.MANGA_EXTRA, id)
-            }
+        ).apply {
+            action = if (canReturnToMain) SHORTCUT_MANGA_BACK else SHORTCUT_MANGA
+            putExtra(MangaDetailsController.MANGA_EXTRA, id)
+        }
 
-        fun openReaderSettings(context: Context) = Intent(
-            context,
-            SearchActivity::class
-                .java,
-        )
-            .apply {
+        fun openReaderSettings(context: Context) =
+            Intent(
+                context,
+                SearchActivity::class
+                    .java,
+            ).apply {
                 action = SHORTCUT_READER_SETTINGS
             }
     }

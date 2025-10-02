@@ -21,9 +21,9 @@ import kotlinx.coroutines.async
  *
  * @param listener The listener that should be notified of extension installation events.
  */
-internal class ExtensionInstallReceiver(private val listener: Listener) :
-    BroadcastReceiver() {
-
+internal class ExtensionInstallReceiver(
+    private val listener: Listener,
+) : BroadcastReceiver() {
     /**
      * Registers this broadcast receiver
      */
@@ -34,21 +34,25 @@ internal class ExtensionInstallReceiver(private val listener: Listener) :
     /**
      * Returns the intent filter this receiver should subscribe to.
      */
-    private val filter get() = IntentFilter().apply {
-        addAction(Intent.ACTION_PACKAGE_ADDED)
-        addAction(Intent.ACTION_PACKAGE_REPLACED)
-        addAction(Intent.ACTION_PACKAGE_REMOVED)
-        addAction(ACTION_EXTENSION_ADDED)
-        addAction(ACTION_EXTENSION_REPLACED)
-        addAction(ACTION_EXTENSION_REMOVED)
-        addDataScheme("package")
-    }
+    private val filter get() =
+        IntentFilter().apply {
+            addAction(Intent.ACTION_PACKAGE_ADDED)
+            addAction(Intent.ACTION_PACKAGE_REPLACED)
+            addAction(Intent.ACTION_PACKAGE_REMOVED)
+            addAction(ACTION_EXTENSION_ADDED)
+            addAction(ACTION_EXTENSION_REPLACED)
+            addAction(ACTION_EXTENSION_REMOVED)
+            addDataScheme("package")
+        }
 
     /**
      * Called when one of the events of the [filter] is received. When the package is an extension,
      * it's loaded in background and it notifies the [listener] when finished.
      */
-    override fun onReceive(context: Context, intent: Intent?) {
+    override fun onReceive(
+        context: Context,
+        intent: Intent?,
+    ) {
         if (intent == null) return
 
         when (intent.action) {
@@ -67,9 +71,7 @@ internal class ExtensionInstallReceiver(private val listener: Listener) :
                 launchNow {
                     when (val result = getExtensionFromIntent(context, intent)) {
                         is LoadResult.Success -> listener.onExtensionUpdated(result.extension)
-                        // Not needed as a package can't be upgraded if the signature is different
-                        is LoadResult.Untrusted -> {
-                        }
+                        is LoadResult.Untrusted -> listener.onExtensionUntrusted(result.extension)
                         else -> {}
                     }
                 }
@@ -90,9 +92,7 @@ internal class ExtensionInstallReceiver(private val listener: Listener) :
      *
      * @param intent The intent that triggered the event.
      */
-    private fun isReplacing(intent: Intent): Boolean {
-        return intent.getBooleanExtra(Intent.EXTRA_REPLACING, false)
-    }
+    private fun isReplacing(intent: Intent): Boolean = intent.getBooleanExtra(Intent.EXTRA_REPLACING, false)
 
     /**
      * Returns the extension triggered by the given intent.
@@ -100,10 +100,19 @@ internal class ExtensionInstallReceiver(private val listener: Listener) :
      * @param context The application context.
      * @param intent The intent containing the package name of the extension.
      */
-    private suspend fun getExtensionFromIntent(context: Context, intent: Intent?): LoadResult {
-        val pkgName = getPackageNameFromIntent(intent)
-            ?: return LoadResult.Error
-        return GlobalScope.async(Dispatchers.Default, CoroutineStart.DEFAULT) { ExtensionLoader.loadExtensionFromPkgName(context, pkgName) }.await()
+    private suspend fun getExtensionFromIntent(
+        context: Context,
+        intent: Intent?,
+    ): LoadResult {
+        val pkgName =
+            getPackageNameFromIntent(intent)
+                ?: return LoadResult.Error
+        return GlobalScope
+            .async(
+                Dispatchers.Default,
+                CoroutineStart.DEFAULT,
+            ) { ExtensionLoader.loadExtensionFromPkgName(context, pkgName) }
+            .await()
     }
 
     /**
@@ -118,8 +127,11 @@ internal class ExtensionInstallReceiver(private val listener: Listener) :
      */
     interface Listener {
         fun onExtensionInstalled(extension: Extension.Installed)
+
         fun onExtensionUpdated(extension: Extension.Installed)
+
         fun onExtensionUntrusted(extension: Extension.Untrusted)
+
         fun onPackageUninstalled(pkgName: String)
     }
 
@@ -128,19 +140,32 @@ internal class ExtensionInstallReceiver(private val listener: Listener) :
         private const val ACTION_EXTENSION_REPLACED = "${BuildConfig.APPLICATION_ID}.ACTION_EXTENSION_REPLACED"
         private const val ACTION_EXTENSION_REMOVED = "${BuildConfig.APPLICATION_ID}.ACTION_EXTENSION_REMOVED"
 
-        fun notifyAdded(context: Context, pkgName: String) {
+        fun notifyAdded(
+            context: Context,
+            pkgName: String,
+        ) {
             notify(context, pkgName, ACTION_EXTENSION_ADDED)
         }
 
-        fun notifyReplaced(context: Context, pkgName: String) {
+        fun notifyReplaced(
+            context: Context,
+            pkgName: String,
+        ) {
             notify(context, pkgName, ACTION_EXTENSION_REPLACED)
         }
 
-        fun notifyRemoved(context: Context, pkgName: String) {
+        fun notifyRemoved(
+            context: Context,
+            pkgName: String,
+        ) {
             notify(context, pkgName, ACTION_EXTENSION_REMOVED)
         }
 
-        private fun notify(context: Context, pkgName: String, action: String) {
+        private fun notify(
+            context: Context,
+            pkgName: String,
+            action: String,
+        ) {
             Intent(action).apply {
                 data = Uri.parse("package:$pkgName")
                 `package` = context.packageName

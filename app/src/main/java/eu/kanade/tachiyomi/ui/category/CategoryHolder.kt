@@ -24,9 +24,12 @@ import java.util.Locale
  * @param view The view used by category items.
  * @param adapter The adapter containing this holder.
  */
-class CategoryHolder(view: View, val adapter: CategoryAdapter) : BaseFlexibleViewHolder(view, adapter) {
-
+class CategoryHolder(
+    view: View,
+    val adapter: CategoryAdapter,
+) : BaseFlexibleViewHolder(view, adapter) {
     private val binding = CategoriesItemBinding.bind(view)
+
     init {
         binding.editButton.setOnClickListener {
             submitChanges()
@@ -53,22 +56,14 @@ class CategoryHolder(view: View, val adapter: CategoryAdapter) : BaseFlexibleVie
         createCategory = category.order == CREATE_CATEGORY_ORDER
         if (createCategory) {
             binding.title.setTextColor(ContextCompat.getColor(itemView.context, R.color.material_on_background_disabled))
-            regularDrawable = ContextCompat.getDrawable(
-                itemView.context,
-                R.drawable
-                    .ic_add_24dp,
-            )
+            regularDrawable = ContextCompat.getDrawable(itemView.context, R.drawable.ic_add_24dp)
             binding.image.isVisible = false
             binding.editButton.setImageDrawable(null)
             binding.editText.setText("")
             binding.editText.hint = binding.title.text
         } else {
             binding.title.setTextColor(itemView.context.getResourceColor(R.attr.colorOnBackground))
-            regularDrawable = ContextCompat.getDrawable(
-                itemView.context,
-                R.drawable
-                    .ic_drag_handle_24dp,
-            )
+            regularDrawable = ContextCompat.getDrawable(itemView.context, R.drawable.ic_drag_handle_24dp)
             binding.image.isVisible = true
             binding.editText.setText(binding.title.text)
         }
@@ -83,17 +78,17 @@ class CategoryHolder(view: View, val adapter: CategoryAdapter) : BaseFlexibleVie
             binding.editText.requestFocus()
             binding.editText.selectAll()
             binding.editButton.setImageDrawable(ContextCompat.getDrawable(itemView.context, R.drawable.ic_check_24dp))
-            binding.editButton.drawable.mutate().setTint(itemView.context.getResourceColor(R.attr.colorSecondary))
+            binding.editButton.drawable
+                .mutate()
+                .setTint(itemView.context.getResourceColor(R.attr.colorSecondary))
             showKeyboard()
             if (!createCategory) {
                 binding.reorder.setImageDrawable(
-                    ContextCompat.getDrawable(
-                        itemView.context,
-                        R.drawable.ic_delete_24dp,
-                    ),
+                    ContextCompat.getDrawable(itemView.context, R.drawable.ic_delete_24dp),
                 )
                 binding.reorder.setOnClickListener {
                     adapter.categoryItemListener.onItemDelete(flexibleAdapterPosition)
+                    hideKeyboard()
                 }
             }
         } else {
@@ -106,20 +101,18 @@ class CategoryHolder(view: View, val adapter: CategoryAdapter) : BaseFlexibleVie
             }
             binding.editText.clearFocus()
             binding.editButton.drawable?.mutate()?.setTint(
-                ContextCompat.getColor(
-                    itemView.context,
-                    R
-                        .color.gray_button,
-                ),
+                ContextCompat.getColor(itemView.context, R.color.gray_button),
             )
             binding.reorder.setImageDrawable(regularDrawable)
         }
     }
 
     private fun submitChanges() {
-        if (binding.editText.visibility == View.VISIBLE) {
-            if (adapter.categoryItemListener
-                .onCategoryRename(flexibleAdapterPosition, binding.editText.text.toString())
+        if (binding.editText.isVisible) {
+            if (adapter.categoryItemListener.onCategoryRename(
+                    flexibleAdapterPosition,
+                    binding.editText.text.toString(),
+                )
             ) {
                 isEditing(false)
                 if (!createCategory) {
@@ -129,19 +122,23 @@ class CategoryHolder(view: View, val adapter: CategoryAdapter) : BaseFlexibleVie
         } else {
             itemView.performClick()
         }
+        hideKeyboard()
     }
 
     private fun showKeyboard() {
-        val inputMethodManager: InputMethodManager =
-            itemView.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        inputMethodManager.showSoftInput(
-            binding.editText,
-            WindowManager.LayoutParams
-                .SOFT_INPUT_ADJUST_PAN,
-        )
+        val inputMethodManager = itemView.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        inputMethodManager.showSoftInput(binding.editText, WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN)
     }
 
-    override fun onActionStateChanged(position: Int, actionState: Int) {
+    private fun hideKeyboard() {
+        val inputMethodManager = itemView.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        inputMethodManager.hideSoftInputFromWindow(binding.editText.windowToken, 0)
+    }
+
+    override fun onActionStateChanged(
+        position: Int,
+        actionState: Int,
+    ) {
         super.onActionStateChanged(position, actionState)
         if (actionState == ItemTouchHelper.ACTION_STATE_DRAG) {
             binding.root.isDragged = true

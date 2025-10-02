@@ -15,17 +15,17 @@ val libraryQuery =
     """
     SELECT M.*, COALESCE(MC.${MangaCategory.COL_CATEGORY_ID}, 0) AS ${Manga.COL_CATEGORY}
     FROM (
-        SELECT ${Manga.TABLE}.*, COALESCE(C.unread, 0) AS ${Manga.COL_UNREAD}, COALESCE(R.hasread, 0) AS ${Manga.COL_HAS_READ}, COALESCE(B.bookmarkCount, 0) AS ${Manga.COL_BOOKMARK_COUNT}
+        SELECT ${Manga.TABLE}.*, COALESCE(C.unread, '') AS ${Manga.COL_UNREAD}, COALESCE(R.hasread, '') AS ${Manga.COL_HAS_READ}, COALESCE(B.bookmarkCount, 0) AS ${Manga.COL_BOOKMARK_COUNT}
         FROM ${Manga.TABLE}
         LEFT JOIN (
-            SELECT ${Chapter.COL_MANGA_ID}, COUNT(*) AS unread
+            SELECT ${Chapter.COL_MANGA_ID}, GROUP_CONCAT(IFNULL(${Chapter.TABLE}.${Chapter.COL_SCANLATOR}, "N/A"), " [.] ") AS unread
             FROM ${Chapter.TABLE}
             WHERE ${Chapter.COL_READ} = 0
             GROUP BY ${Chapter.COL_MANGA_ID}
         ) AS C
         ON ${Manga.COL_ID} = C.${Chapter.COL_MANGA_ID}
         LEFT JOIN (
-            SELECT ${Chapter.COL_MANGA_ID}, COUNT(*) AS hasread
+            SELECT ${Chapter.COL_MANGA_ID}, GROUP_CONCAT(IFNULL(${Chapter.TABLE}.${Chapter.COL_SCANLATOR}, "N/A"), " [.] ") AS hasread
             FROM ${Chapter.TABLE}
             WHERE ${Chapter.COL_READ} = 1
             GROUP BY ${Chapter.COL_MANGA_ID}
@@ -50,8 +50,11 @@ val libraryQuery =
 /**
  * Query to get the recent chapters of manga from the library up to a date.
  */
-fun getRecentsQuery(search: String, offset: Int, isResuming: Boolean) =
-    """
+fun getRecentsQuery(
+    search: String,
+    offset: Int,
+    isResuming: Boolean,
+) = """
     SELECT ${Manga.TABLE}.${Manga.COL_URL} as mangaUrl, * FROM ${Manga.TABLE} JOIN ${Chapter.TABLE}
     ON ${Manga.TABLE}.${Manga.COL_ID} = ${Chapter.TABLE}.${Chapter.COL_MANGA_ID}
     WHERE ${Manga.COL_FAVORITE} = 1
@@ -61,13 +64,18 @@ fun getRecentsQuery(search: String, offset: Int, isResuming: Boolean) =
     ${limitAndOffset(true, isResuming, offset)}
 """
 
-fun limitAndOffset(endless: Boolean, isResuming: Boolean, offset: Int): String {
-    return when {
+fun limitAndOffset(
+    endless: Boolean,
+    isResuming: Boolean,
+    offset: Int,
+    customLimit: Int = 0,
+): String =
+    when {
+        customLimit > 0 -> "LIMIT $customLimit\nOFFSET $offset"
         isResuming && endless && offset > 0 -> "LIMIT $offset"
         endless -> "LIMIT ${RecentsPresenter.ENDLESS_LIMIT}\nOFFSET $offset"
         else -> "LIMIT ${RecentsPresenter.SHORT_LIMIT}"
     }
-}
 
 /**
  * Query to get the recently read chapters of manga from the library up to a date.
@@ -79,8 +87,7 @@ fun getRecentHistoryUngrouped(
     search: String = "",
     offset: Int = 0,
     isResuming: Boolean,
-) =
-    """
+) = """
     SELECT ${Manga.TABLE}.${Manga.COL_URL} as mangaUrl, ${Manga.TABLE}.*, ${Chapter.TABLE}.*, ${History.TABLE}.*
     FROM ${Manga.TABLE}
     JOIN ${Chapter.TABLE}
@@ -103,8 +110,7 @@ fun getRecentMangasLimitQuery(
     search: String = "",
     offset: Int = 0,
     isResuming: Boolean,
-) =
-    """
+) = """
     SELECT ${Manga.TABLE}.${Manga.COL_URL} as mangaUrl, ${Manga.TABLE}.*, ${Chapter.TABLE}.*, ${History.TABLE}.*
     FROM ${Manga.TABLE}
     JOIN ${Chapter.TABLE}
@@ -130,8 +136,10 @@ fun getRecentMangasLimitQuery(
  * The select statement returns all information of chapters that have the same id as the chapter in max_last_read
  * and are read after the given time period
  */
-fun getHistoryPerPeriodQuery(startDate: Long, endDate: Long) =
-    """
+fun getHistoryPerPeriodQuery(
+    startDate: Long,
+    endDate: Long,
+) = """
     SELECT ${Manga.TABLE}.${Manga.COL_URL} as mangaUrl, ${Manga.TABLE}.*, ${Chapter.TABLE}.*, ${History.TABLE}.*
     FROM ${Manga.TABLE}
     JOIN ${Chapter.TABLE}
@@ -158,9 +166,10 @@ fun getAllRecentsType(
     endless: Boolean,
     offset: Int = 0,
     isResuming: Boolean,
+    customLimit: Int,
 ) = """
 	SELECT * FROM
-	(SELECT mangas.url as mangaUrl, mangas.*, chapters.*, history.*
+	(SELECT mangas.url as mangaUrl, chapters.url as chapterUrl, mangas.*, chapters.*, history.*
     FROM (
         SELECT mangas.*
         FROM mangas
@@ -190,9 +199,9 @@ fun getAllRecentsType(
     AND lower(${Manga.COL_TITLE}) LIKE '%$search%')
 	UNION
 	SELECT * FROM
-	(SELECT ${Manga.TABLE}.${Manga.COL_URL} as mangaUrl, ${Manga.TABLE}.*, ${Chapter.TABLE}.*, 
+	(SELECT ${Manga.TABLE}.${Manga.COL_URL} as mangaUrl, chapters.url as chapterUrl, ${Manga.TABLE}.*, ${Chapter.TABLE}.*, 
         Null as history_id, 
-        Null as history_chapter_id, 
+        Null as history_chapter_id,
         chapters.date_fetch as history_last_read, 
         Null as history_time_read
     FROM ${Manga.TABLE}
@@ -212,6 +221,7 @@ fun getAllRecentsType(
     UNION
     SELECT * FROM
     (SELECT mangas.url as mangaUrl, 
+        Null as chapterUrl,
         mangas.*,
 		Null as _id,
 		Null as manga_id,
@@ -234,7 +244,7 @@ fun getAllRecentsType(
     WHERE ${Manga.COL_FAVORITE} = 1
     AND lower(${Manga.COL_TITLE}) LIKE '%$search%')
     ORDER BY history_last_read DESC
-    ${limitAndOffset(endless, isResuming, offset)}
+    ${limitAndOffset(endless, isResuming, offset, customLimit)}
 """
 
 fun getHistoryByMangaId() =

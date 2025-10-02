@@ -13,6 +13,7 @@ import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.TrackPreferences
 import eu.kanade.tachiyomi.extension.ExtensionManager
+import eu.kanade.tachiyomi.extension.util.TrustExtension
 import eu.kanade.tachiyomi.network.JavaScriptEngine
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.SourceManager
@@ -25,8 +26,9 @@ import uy.kohesive.injekt.api.addSingleton
 import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
 
-class AppModule(val app: Application) : InjektModule {
-
+class AppModule(
+    val app: Application,
+) : InjektModule {
     override fun InjektRegistrar.registerInjectables() {
         addSingleton(app)
 
@@ -67,6 +69,8 @@ class AppModule(val app: Application) : InjektModule {
         addSingletonFactory { ChapterFilter() }
 
         addSingletonFactory { MangaShortcutManager() }
+
+        addSingletonFactory { TrustExtension(get()) }
 
         // Asynchronously init expensive components for a faster cold start
 
