@@ -74,6 +74,9 @@ fun AppCompatActivity.getThemeWithExtras(
     }
     if (useAmoled) {
         theme.applyStyle(R.style.ThemeOverlay_Tachiyomi_Amoled, true)
+        if (preferences.themeContrastAmoled().get()) {
+            theme.applyStyle(R.style.ThemeOverlay_Tachiyomi_Contrast, true)
+        }
     }
     return theme
 }

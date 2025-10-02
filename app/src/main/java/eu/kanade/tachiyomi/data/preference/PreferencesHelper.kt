@@ -124,6 +124,8 @@ class PreferencesHelper(
 
     fun themeDarkAmoled() = flowPrefs.getBoolean(Keys.themeDarkAmoled, false)
 
+    fun themeContrastAmoled() = flowPrefs.getBoolean(Keys.themeContrastAmoled, false)
+
     private val supportsDynamic = DynamicColors.isDynamicColorAvailable()
 
     fun lightTheme() = flowPrefs.getEnum(Keys.lightTheme, if (supportsDynamic) Themes.MONET else Themes.DEFAULT)
